@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>2FA Recover</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" integrity="sha256-zIG416V1ynj3Wgju/scU80KAEWOsO5rRLfVyRDuOv7Q=" crossorigin="anonymous" />
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous" />
+
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js" integrity="sha256-7/yoZS3548fXSRXqc/xYzjsmuW3sFKzuvOCHd06Pmps=" crossorigin="anonymous"></script>
+        <style>
+            html {
+                height: 100%;
+            }
+            body {
+                min-height: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app">
+            <div class="container">
+                <nav class="navbar is-transparent" role="navigation" aria-label="main navigation">
+                    <div class="navbar-brand">
+                        <a class="navbar-item" href="#">
+                            <img src="./images/logo.png" alt="2FA Recover" />
+                        </a>
+                    </div>
+                </nav>
+                <section class="section">
+                    <div class="columns is-12">
+                        <div class="column is-6">
+                            <div class="field">
+                                <label for="title" class="label">Title</label>
+                                <div class="control">
+                                    <input v-model.trim="title" class="input" type="text" placeholder="The tile of your entry" />
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="code" class="label">Code</label>
+                                <div class="control">
+                                    <input v-model.trim="code" class="input" type="password" placeholder="The recovery code for this entry"/>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="account" class="label">Account</label>
+                                <div class="control">
+                                    <input v-model.trim="account" class="input" type="text" placeholder="The account (or username) for this entry" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-6">
+                            <nav class="level">
+                                <div class="level-item has-text-centered">
+                                    <canvas id="qr"></canvas>
+                                </div>
+                            </nav>
+                        </div>
+                    </div>
+                    <h6 class="subtitle is-6 is-justified">Quickly create QR codes for 2FA authenticators (like the Google Authenticator, for example), using the recovery code you hopefully wrote down. We do not transfer any information to the server, so your data is completely safe.</h6>
+                </section>
+            </div>
+        </div>
+
+        <script>
+            new Vue({
+                el: '#app',
+                data: {
+                    title: '',
+                    code: '',
+                    account: ''
+                },
+                computed: {
+                    allContent: function () {
+                        return this.title + ' - ' + this.code + ' - ' + this.account
+                    }
+                },
+                watch: {
+                    allContent: function (newQuestion, oldQuestion) {
+                        this.qrCode.foregroundAlpha = 0.2;
+                        this.debouncedQrCode()
+                    }
+                },
+                created: function () {
+                    this.debouncedQrCode = _.debounce(this.createQrCode, 500)
+                },
+                mounted: function () {
+                    this.qrCode = new QRious({
+                        element: document.getElementById('qr'),
+                        foregroundAlpha: 0.2,
+                        size: 256
+                    });
+                },
+                methods: {
+                    createQrCode:  function () {
+                        if(this.account || this.code || this.title) {
+                            this.qrCode.foregroundAlpha = 0.8;
+                        }
+                        this.qrCode.value = 'otpauth://totp/' + this.account + '?secret=' + this.code + '&issuer=' + this.title
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
